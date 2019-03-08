@@ -14,18 +14,20 @@ const dummyText = "I'm a big four-eyed lame-o and I wear the same stupid sweater
 var pollySvc = polly.New(session.New())
 
 func main() {
-	err := synthesizeSpeech()
+	output, err := synthesizeSpeech()
 
 	if err != nil {
 		fmt.Println("It was not a success")
 		os.Exit(1)
 	}
 
+	err = writeOutput(output)
+
 	fmt.Println("Success")
 	os.Exit(0)
 }
 
-func synthesizeSpeech() error {
+func synthesizeSpeech() (*polly.SynthesizeSpeechOutput, error) {
 	input := polly.SynthesizeSpeechInput{
 		Text:         aws.String(dummyText),
 		OutputFormat: aws.String("mp3"),
@@ -35,9 +37,13 @@ func synthesizeSpeech() error {
 	output, err := pollySvc.SynthesizeSpeech(&input)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
+	return output, nil
+}
+
+func writeOutput(*polly.SynthesizeSpeechOutput) error {
 	// if the file exists
 	// delete it
 	// if it doesn
