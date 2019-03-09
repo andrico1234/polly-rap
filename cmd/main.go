@@ -1,6 +1,7 @@
 package main
 
 import (
+	"converter"
 	"fmt"
 	"os"
 
@@ -11,7 +12,11 @@ import (
 
 const dummyText = "I'm a big four-eyed lame-o and I wear the same stupid sweater everyday, and - THE SPRINGFIELD RIVER!"
 
-var pollySvc = polly.New(session.New())
+var sess = session.Must(session.NewSession(&aws.Config{
+	Region: aws.String("us-west-2"),
+}))
+
+var pollySvc = polly.New(sess)
 
 func main() {
 	output, err := synthesizeSpeech()
@@ -21,7 +26,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = writeOutput(output)
+	err = converter.OutputAudioToFs(output)
+
+	if err != nil {
+		fmt.Println("There was an error writing to the filesystem")
+		os.Exit(1)
+	}
 
 	fmt.Println("Success")
 	os.Exit(0)
@@ -36,20 +46,14 @@ func synthesizeSpeech() (*polly.SynthesizeSpeechOutput, error) {
 
 	output, err := pollySvc.SynthesizeSpeech(&input)
 
+	fmt.Println("output", output)
+
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 
 	return output, nil
-}
-
-func writeOutput(*polly.SynthesizeSpeechOutput) error {
-	// if the file exists
-	// delete it
-	// if it doesn
-	// create a new file
-
-	return nil
 }
 
 // come up with an architecture for this application
