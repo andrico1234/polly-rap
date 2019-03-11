@@ -1,9 +1,9 @@
 package main
 
 import (
-	"converter"
 	"fmt"
 	"os"
+	"polly-rap/internal/converter"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"

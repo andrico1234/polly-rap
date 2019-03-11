@@ -107,3 +107,5 @@ func writeFile(file *os.File, lines []string) error {
 
 	return nil
 }
+
+// look into io.Copy
