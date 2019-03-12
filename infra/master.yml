@@ -1,0 +1,21 @@
+# what's the overall architecture going to look like?
+
+# definitely gonna need an s3 bucket to hold all of the items
+# definitely going to need to run an ec2 instance that
+# going to need a datrabase instance to hold all of the metadata, including reference to the s3 bucket.
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  PollyAudioBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      AccessControl: BucketOwnerFullControl
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: aws:kms
+      BucketName: andrico-polly-audio-files
+      Tags:
+        - Key: s3
+          Value: polly-audio
+    
