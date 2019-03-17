@@ -1,4 +1,4 @@
-package converter
+package pollyhelper
 
 import (
 	"bufio"
@@ -10,7 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/polly"
 )
 
-func OutputAudioToFs(pollyOuput *polly.SynthesizeSpeechOutput) error {
+/*
+WriteAudioToFs takes the pollyOutput given by the AWS polly service, and outputs the file]
+to the file system.
+*/
+func WriteAudioToFs(pollyOuput *polly.SynthesizeSpeechOutput) error {
 	file, err := createFile()
 
 	if err != nil {

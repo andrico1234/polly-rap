@@ -9,3 +9,7 @@
 *.out
 
 .config
+
+# Any output directories
+**/*/out/
+out/

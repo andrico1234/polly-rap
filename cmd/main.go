@@ -2,31 +2,49 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
-	"polly-rap/internal/converter"
+	"polly-rap/internal/pollyhelper"
+	"polly-rap/internal/spotifyhelper"
+
+	"github.com/joho/godotenv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/polly"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-const dummyText = "I'm a big four-eyed lame-o and I wear the same stupid sweater everyday, and - THE SPRINGFIELD RIVER!"
-
 var sess = session.Must(session.NewSession(&aws.Config{
-	Region: aws.String("us-west-2"),
+	Region: aws.String("eu-west-2"),
 }))
 
 var pollySvc = polly.New(sess)
+var dynamoDbSvc = dynamodb.New(sess)
+var uploader = s3manager.NewUploader(sess)
 
 func main() {
-	output, err := synthesizeSpeech()
+	err := godotenv.Load("../.env")
+
+	if err != nil {
+		log.Fatal("There was an error loading the config file")
+	}
+
+	songData := spotifyhelper.GetSong()
+	output, err := pollyhelper.SynthesizeSpeech(pollySvc, songData.Lyrics)
 
 	if err != nil {
 		fmt.Println("It was not a success")
 		os.Exit(1)
 	}
 
-	err = converter.OutputAudioToFs(output)
+	audioURL, err := pollyhelper.UploadToS3(uploader, output)
+	audioMetadata := pollyhelper.ConvertToMetadata(songData, audioURL)
+
+	pollyhelper.WriteToDB(dynamoDbSvc, audioMetadata)
+
+	err = pollyhelper.WriteAudioToFs(output)
 
 	if err != nil {
 		fmt.Println("There was an error writing to the filesystem")
@@ -36,37 +54,3 @@ func main() {
 	fmt.Println("Success")
 	os.Exit(0)
 }
-
-func synthesizeSpeech() (*polly.SynthesizeSpeechOutput, error) {
-	input := polly.SynthesizeSpeechInput{
-		Text:         aws.String(dummyText),
-		OutputFormat: aws.String("mp3"),
-		VoiceId:      aws.String("Kendra"),
-	}
-
-	output, err := pollySvc.SynthesizeSpeech(&input)
-
-	fmt.Println("output", output)
-
-	if err != nil {
-		fmt.Println(err)
-		return nil, err
-	}
-
-	return output, nil
-}
-
-// come up with an architecture for this application
-
-// run an EC2 server
-// get everything working via postman.
-
-// pass mock data to polly
-
-// what do we get back from polly?
-// do we get a streamed format back?
-
-// create resources via cloudformation
-
-// aws cli for polly - describeVoices id: kendra, ivy, emma, nicole
-// pronounciation lexicons are ways to customize the pronounciation of words
